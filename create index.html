@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMS - Pondok Pesantren As-Sunnah (Clario Edition)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        clarioBg: '#050505',
+                        clarioCard: '#121212',
+                        clarioCardHover: '#181818',
+                        clarioLime: '#7bf21a',
+                        clarioLimeDark: '#4ea10c',
+                        clarioMuted: '#9e9e9e',
+                        clarioBorder: '#222222',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222222;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7bf21a;
+        }
+        /* Custom neon glowing animations matching Clario style on image_dfe1f8.png */
+        .neon-glow-btn {
+            box-shadow: 0 0 15px rgba(123, 242, 26, 0.35);
+            transition: all 0.3s ease;
+        }
+        .neon-glow-btn:hover {
+            box-shadow: 0 0 25px rgba(123, 242, 26, 0.6);
+            transform: translateY(-1px);
+        }
+        .neon-glow-pill {
+            box-shadow: 0 0 8px rgba(123, 242, 26, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-clarioBg text-white font-sans min-h-screen antialiased flex flex-col" x-data="appData()" x-init="initData()">
+
+    <!-- LOGIN PAGE (Clario Dark-Glow Aesthetic) -->
+    <div x-show="!isLoggedIn" x-cloak class="min-h-screen w-full flex items-center justify-center bg-clarioBg p-4 z-50 relative overflow-hidden">
+        <!-- Neon background glow circles referencing image_dfe1f8.png colors -->
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-clarioLime/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-clarioLime/15 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div class="bg-clarioCard rounded-3xl w-full max-w-md shadow-2xl p-8 border border-clarioBorder relative z-10">
+            <div class="text-center mb-8">
+                <div class="w-14 h-14 rounded-2xl bg-clarioLime flex items-center justify-center text-black mx-auto mb-4 shadow-[0_0_25px_rgba(123,242,26,0.5)]">
+                    <i class="fa-solid fa-mosque text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold tracking-tight text-white">SIMS AS-SUNNAH</h2>
+                <p class="text-xs text-clarioLime uppercase tracking-widest font-semibold mt-1">As-Sunnah Portal Login</p>
+            </div>
+
+            <!-- Error Message Alert Box (Browser safe - No Alerts) -->
+            <div x-show="loginError" x-cloak class="p-3.5 mb-5 rounded-xl border border-red-900/50 bg-red-950/20 text-red-400 text-xs font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span x-text="loginError"></span>
+            </div>
+
+            <!-- Role Selector Buttons (Sleek Glassmorphism style) -->
+            <div class="grid grid-cols-2 gap-2 p-1.5 bg-black border border-clarioBorder rounded-2xl mb-6">
+                <button type="button" @click="loginRole = 'admin'; loginError = '';" :class="loginRole === 'admin' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'text-clarioMuted hover:text-white'" class="py-2.5 rounded-xl text-xs transition duration-200">
+                    <i class="fa-solid fa-user-shield mr-1"></i> Admin
+                </button>
+                <button type="button" @click="loginRole = 'walikelas'; loginError = '';" :class="loginRole === 'walikelas' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'text-clarioMuted hover:text-white'" class="py-2.5 rounded-xl text-xs transition duration-200">
+                    <i class="fa-solid fa-chalkboard-user mr-1"></i> Wali Kelas
+                </button>
+            </div>
+
+            <form @submit.prevent="login()" class="space-y-4">
+                <!-- Username (Only for Admin) -->
+                <div x-show="loginRole === 'admin'" x-cloak>
+                    <label class="block text-xs font-bold text-clarioMuted uppercase tracking-wider mb-1.5">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-clarioMuted">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input x-model="loginUsername" type="text" placeholder="Masukkan username admin" class="w-full pl-10 pr-4 py-2.5 bg-black border border-clarioBorder rounded-xl focus:outline-none focus:ring-1 focus:ring-clarioLime text-sm text-white placeholder-clarioMuted transition">
+                    </div>
+                </div>
+
+                <!-- Wali Kelas Dropdown (Dynamic lists for homerooms) -->
+                <div x-show="loginRole === 'walikelas'" x-cloak>
+                    <label class="block text-xs font-bold text-clarioMuted uppercase tracking-wider mb-1.5">Pilih Ustadz/ah</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-clarioMuted">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </span>
+                        <select x-model="loginWaliId" class="w-full pl-10 pr-4 py-2.5 bg-black border border-clarioBorder rounded-xl focus:outline-none focus:ring-1 focus:ring-clarioLime text-sm text-white transition">
+                            <option value="">-- Pilih Nama Anda --</option>
+                            <template x-for="w in waliKelasList" :key="w.id">
+                                <option :value="w.id" x-text="w.nama + ' (Kelas ' + w.kelas_diajar + ')'"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Password input field with guides -->
+                <div>
+                    <label class="block text-xs font-bold text-clarioMuted uppercase tracking-wider mb-1.5" x-text="loginRole === 'admin' ? 'Password' : 'Password (Gunakan NIP Anda)'"></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-clarioMuted">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input x-model="loginPassword" type="password" placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-black border border-clarioBorder rounded-xl focus:outline-none focus:ring-1 focus:ring-clarioLime text-sm text-white placeholder-clarioMuted transition">
+                    </div>
+                    <p class="text-[10px] text-clarioMuted mt-2 leading-relaxed bg-black/40 p-2.5 border border-clarioBorder rounded-xl">
+                        <span class="text-clarioLime font-bold"><i class="fa-solid fa-circle-info mr-1"></i>Petunjuk Akses:</span> <br>
+                        <span x-text="loginRole === 'admin' ? 'Gunakan Username: admin | Password: admin123' : 'Pilih nama Anda, lalu masukkan NIP Anda sebagai sandi (Contoh Ustadz Ahmad Fauzi: 198703112015)'"></span>
+                    </p>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-clarioLime hover:bg-[#6ed915] text-black font-extrabold rounded-xl transition duration-300 neon-glow-btn text-sm mt-6 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Masuk ke Sistem</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN SYSTEM VIEW -->
+    <div x-show="isLoggedIn" x-cloak class="flex h-screen overflow-hidden">
+        <!-- SIDEBAR -->
+        <aside class="w-72 bg-black border-r border-clarioBorder flex flex-col justify-between shadow-2xl z-20 shrink-0">
+            <div>
+                <!-- Brand Header -->
+                <div class="p-6 border-b border-clarioBorder flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-clarioLime flex items-center justify-center text-black shadow-[0_0_15px_rgba(123,242,26,0.4)]">
+                        <i class="fa-solid fa-mosque text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-wide leading-none text-white">SIMS</h1>
+                        <span class="text-xs text-clarioLime font-semibold tracking-widest uppercase">PP AS-SUNNAH</span>
+                    </div>
+                </div>
+
+                <!-- User Active Role Session Profile Card -->
+                <div class="px-6 py-4 border-b border-clarioBorder bg-[#080808] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-[#1c1c1c] text-clarioLime border border-clarioBorder/40 flex items-center justify-center font-bold text-xs shadow-inner">
+                        <span x-text="currentUser?.role === 'admin' ? 'AD' : 'WK'"></span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-bold text-white truncate" x-text="currentUser?.name"></p>
+                        <p class="text-[10px] text-clarioLime font-semibold tracking-wider uppercase" x-text="currentUser?.role === 'admin' ? 'Administrator' : 'Wali Kelas'"></p>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="p-4 space-y-1.5">
+                    <button @click="currentTab = 'dashboard'" :class="currentTab === 'dashboard' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'hover:bg-clarioCard text-clarioMuted hover:text-white'" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition duration-200 text-sm text-left">
+                        <i class="fa-solid fa-chart-line text-lg w-6"></i> Dashboard Analitik
+                    </button>
+                    <button @click="currentTab = 'masuk'" :class="currentTab === 'masuk' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'hover:bg-clarioCard text-clarioMuted hover:text-white'" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition duration-200 text-sm text-left">
+                        <i class="fa-solid fa-user-check text-lg w-6"></i> Santri Aktif (Masuk)
+                    </button>
+                    <button @click="currentTab = 'keluar'" :class="currentTab === 'keluar' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'hover:bg-clarioCard text-clarioMuted hover:text-white'" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition duration-200 text-sm text-left">
+                        <i class="fa-solid fa-user-minus text-lg w-6"></i> Santri Keluar
+                    </button>
+                    <button @click="currentTab = 'alumni'" :class="currentTab === 'alumni' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'hover:bg-clarioCard text-clarioMuted hover:text-white'" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition duration-200 text-sm text-left">
+                        <i class="fa-solid fa-graduation-cap text-lg w-6"></i> Direktori Alumni
+                    </button>
+                    <button @click="currentTab = 'walikelas'" :class="currentTab === 'walikelas' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'hover:bg-clarioCard text-clarioMuted hover:text-white'" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition duration-200 text-sm text-left">
+                        <i class="fa-solid fa-chalkboard-user text-lg w-6"></i> Wali Kelas & Visitasi
+                    </button>
+                    
+                    <div class="h-px bg-clarioBorder my-4"></div>
+                    <div class="px-4 py-1 text-xs font-bold tracking-wider text-clarioMuted uppercase">Monitoring & Log</div>
+                    
+                    <button @click="currentTab = 'monitoring'" :class="currentTab === 'monitoring' ? 'bg-clarioLime text-black font-extrabold shadow-[0_0_15px_rgba(123,242,26,0.3)]' : 'hover:bg-clarioCard text-clarioMuted hover:text-white'" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition duration-200 text-sm text-left">
+                        <i class="fa-solid fa-square-poll-horizontal text-lg w-6"></i> Catatan Harian Santri
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Footer Sidebar -->
+            <div class="p-4 border-t border-clarioBorder bg-[#080808] text-center">
+                <span class="text-xs text-clarioMuted">SIMS Premium v2.6 • Clario Theme</span>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col overflow-y-auto bg-clarioBg">
+            <!-- Header Bar -->
+            <header class="bg-black border-b border-clarioBorder px-8 py-5 flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-extrabold text-white tracking-tight" x-text="getTabTitle()"></h2>
+                </div>
+                
+                <!-- Navbar Interactive Academic Year & Log Out Action -->
+                <div class="flex items-center gap-4">
+                    <div class="relative" x-data="{ openTA: false }">
+                        <button @click="openTA = !openTA" class="text-xs font-bold px-4 py-2 bg-clarioCard hover:bg-clarioCardHover text-clarioLime border border-clarioBorder rounded-full flex items-center gap-2 transition shadow-[0_0_10px_rgba(123,242,26,0.1)]">
+                            <span class="w-2 h-2 rounded-full bg-clarioLime animate-pulse"></span>
+                            <span>TA: <span class="text-white" x-text="selectedTahunAjaran"></span></span>
+                            <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu for Academic Year -->
+                        <div x-show="openTA" @click.away="openTA = false" x-cloak class="absolute right-0 mt-2 w-52 bg-clarioCard border border-clarioBorder rounded-xl shadow-2xl z-30 py-2 text-xs">
+                            <div class="px-3 py-1.5 text-[10px] font-bold text-clarioMuted uppercase tracking-wider border-b border-clarioBorder mb-1">
+                                Pilih Tahun Ajaran
+                            </div>
+                            <template x-for="ta in daftarTahunAjaran" :key="ta">
+                                <button @click="selectedTahunAjaran = ta; openTA = false; saveToStorage()" class="w-full text-left px-3 py-2 hover:bg-black flex items-center justify-between transition" :class="selectedTahunAjaran === ta ? 'text-clarioLime font-bold' : 'text-white'">
+                                    <span x-text="'Tahun Ajaran ' + ta"></span>
+                                    <i x-show="selectedTahunAjaran === ta" class="fa-solid fa-circle-check text-clarioLime text-[10px]"></i>
+                                </button>
+                            </template>
+                            <!-- Restrict adding TA only for Admin -->
+                            <template x-if="currentUser?.role === 'admin'">
+                                <div>
+                                    <div class="h-px bg-clarioBorder my-1.5"></div>
+                                    <button @click="openTA = false; openModal('addTahunAjaran')" class="w-full text-left px-3 py-2 text-clarioLime hover:bg-black font-extrabold flex items-center gap-2 transition">
+                                        <i class="fa-solid fa-plus-circle text-xs"></i> Tambah TA Baru
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Log Out Action Button -->
+                    <button @click="logout()" class="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 rounded-xl text-xs font-bold flex items-center gap-2 transition" title="Log Out / Keluar Sesi">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Keluar</span>
+                    </button>
+
+                    <div class="w-10 h-10 rounded-full bg-[#1c1c1c] flex items-center justify-center text-clarioLime font-bold border border-clarioBorder shadow-[0_0_10px_rgba(123,242,26,0.15)]">
+                        <span x-text="currentUser?.role === 'admin' ? 'AD' : currentUser?.name.slice(3, 5).toUpperCase()"></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Container -->
+            <div class="p-8 max-w-[1400px] mx-auto w-full flex-grow">
+
+                <!-- 1. DASHBOARD OVERVIEW -->
+                <div x-show="currentTab === 'dashboard'" x-cloak class="space-y-8">
+                    <!-- Academic Year Active Banner -->
+                    <div class="bg-gradient-to-r from-clarioCard to-black border border-clarioBorder p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <span class="px-2.5 py-1 text-[10px] bg-black text-clarioLime border border-clarioBorder rounded-full uppercase tracking-wider font-extrabold" x-text="'Periode Aktif: ' + selectedTahunAjaran"></span>
+                            <h3 class="text-xl font-bold text-white mt-2">Selamat Datang di SIMS Pesantren</h3>
+                            <p class="text-xs text-clarioMuted mt-1">Seluruh statistik, pendaftaran berkas, monitoring prestasi santri, dan home-visit wali kelas terekam pada Tahun Ajaran yang berjalan.</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-[#1c1c1c] px-4 py-2 border border-clarioBorder rounded-xl self-start md:self-auto shadow-inner">
+                            <i class="fa-regular fa-calendar text-clarioLime text-sm"></i>
+                            <span class="text-xs text-clarioMuted">TA Terpilih:</span>
+                            <strong class="text-sm font-extrabold text-white" x-text="selectedTahunAjaran"></strong>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats Cards (Clario Dark Aesthetic) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder hover:bg-clarioCardHover transition duration-300 flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-xl bg-black border border-clarioBorder text-clarioLime flex items-center justify-center text-2xl shadow-[0_0_10px_rgba(123,242,26,0.1)]">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-clarioMuted font-bold uppercase tracking-wider">Santri Aktif</p>
+                                <h3 class="text-3xl font-extrabold text-white mt-1" x-text="getSantriCount('aktif')"></h3>
+                            </div>
+                        </div>
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder hover:bg-clarioCardHover transition duration-300 flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-xl bg-black border border-clarioBorder text-red-500 flex items-center justify-center text-2xl">
+                                <i class="fa-solid fa-user-xmark"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-clarioMuted font-bold uppercase tracking-wider">Santri Keluar</p>
+                                <h3 class="text-3xl font-extrabold text-white mt-1" x-text="getSantriCount('keluar')"></h3>
+                            </div>
+                        </div>
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder hover:bg-clarioCardHover transition duration-300 flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-xl bg-black border border-clarioBorder text-blue-400 flex items-center justify-center text-2xl">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-clarioMuted font-bold uppercase tracking-wider">Total Alumni</p>
+                                <h3 class="text-3xl font-extrabold text-white mt-1" x-text="getSantriCount('alumni')"></h3>
+                            </div>
+                        </div>
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder hover:bg-clarioCardHover transition duration-300 flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-xl bg-black border border-clarioBorder text-clarioLime flex items-center justify-center text-2xl">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-clarioMuted font-bold uppercase tracking-wider">Wali Kelas</p>
+                                <h3 class="text-3xl font-extrabold text-white mt-1" x-text="waliKelasList.length"></h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Chart Panels (Clario Theme Charts with Full Year coverage) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder flex flex-col justify-between h-[400px]">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-clarioLime"></span> Distribusi Santri Per-Kelas
+                                </h3>
+                                <span class="text-xs bg-[#1a1a1a] px-3 py-1 rounded-full text-clarioMuted border border-clarioBorder font-bold" x-text="selectedTahunAjaran"></span>
+                            </div>
+                            <div class="relative flex-grow">
+                                <canvas id="chartClassDistribution"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder flex flex-col justify-between h-[400px]">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-clarioLime"></span> Tren Masuk vs Keluar Santri (Jan - Des)
+                                </h3>
+                                <span class="text-xs bg-[#1a1a1a] px-3 py-1 rounded-full text-clarioLime border border-clarioBorder font-bold" x-text="selectedTahunAjaran"></span>
+                            </div>
+                            <div class="relative flex-grow">
+                                <canvas id="chartInAndOutTrendsFullYear"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitoring Highlight in Dashboard -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Top Tahfidz Achievers -->
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder lg:col-span-2">
+                            <h3 class="text-base font-bold text-white mb-5 flex items-center gap-2.5">
+                                <i class="fa-solid fa-book-open text-clarioLime"></i> Progres Tahfidz Tertinggi (Juz)
+                            </h3>
+                            <div class="space-y-4">
+                                <template x-for="s in getTopTahfidz()" :key="s.id">
+                                    <div class="flex items-center justify-between p-4 bg-black border border-clarioBorder rounded-xl hover:border-neutral-800 transition">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="w-10 h-10 rounded-full bg-[#1c1c1c] text-clarioLime border border-clarioBorder font-bold flex items-center justify-center text-xs" x-text="s.nama.slice(0, 2).toUpperCase()"></div>
+                                            <div>
+                                                <h4 class="font-bold text-white text-sm" x-text="s.nama"></h4>
+                                                <p class="text-xs text-clarioMuted" x-text="'Kelas ' + s.kelas"></p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="px-3.5 py-1.5 bg-[#121212] text-clarioLime border border-clarioBorder rounded-lg text-xs font-extrabold" x-text="s.tahfidz + ' Juz'"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Discipline Alert Status -->
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder">
+                            <h3 class="text-base font-bold text-white mb-5 flex items-center gap-2.5">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Peringatan Kedisiplinan
+                            </h3>
+                            <div class="space-y-4">
+                                <template x-for="s in getAlertKedisiplinan()" :key="s.id">
+                                    <div class="p-4 rounded-xl border border-red-950/40 bg-red-950/20 flex items-start gap-3.5">
+                                        <div class="text-red-500 mt-1"><i class="fa-solid fa-circle-exclamation"></i></div>
+                                        <div>
+                                            <h4 class="font-bold text-white text-sm" x-text="s.nama"></h4>
+                                            <p class="text-xs text-red-300/80 mt-0.5" x-text="'Akumulasi Poin: ' + s.pelanggaran"></p>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="getAlertKedisiplinan().length === 0">
+                                    <div class="text-center py-10 text-clarioMuted">
+                                        <i class="fa-regular fa-face-smile text-4xl text-clarioLime mb-3.5 block"></i>
+                                        <p class="text-sm font-bold text-white">Semua Aman</p>
+                                        <p class="text-xs text-clarioMuted mt-1">Belum ada santri aktif yang melewati batas poin pelanggaran.</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. DATA SANTRI MASUK (AKTIF) -->
+                <div x-show="currentTab === 'masuk'" x-cloak class="space-y-6">
+                    <!-- Filters & Search Bar -->
+                    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-clarioCard p-5 rounded-2xl border border-clarioBorder shadow-sm">
+                        <div class="flex flex-1 flex-col sm:flex-row gap-3">
+                            <div class="relative flex-1 max-w-md">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-clarioMuted">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input x-model="searchQuery" type="text" placeholder="Cari nama atau NIS santri..." class="w-full pl-10 pr-4 py-2.5 bg-black border border-clarioBorder rounded-xl focus:ring-1 focus:ring-clarioLime focus:border-clarioLime focus:outline-none text-sm text-white placeholder-clarioMuted transition">
+                            </div>
+                            <select x-model="classFilter" class="bg-black border border-clarioBorder text-clarioMuted px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-clarioLime focus:border-clarioLime">
+                                <option value="semua">Semua Kelas</option>
+                                <option value="10-A">Kelas 10-A</option>
+                                <option value="10-B">Kelas 10-B</option>
+                                <option value="11-A">Kelas 11-A</option>
+                                <option value="11-B">Kelas 11-B</option>
+                                <option value="12-A">Kelas 12-A</option>
+                            </select>
+                        </div>
+                        <!-- Restrict adding active students for Admin only -->
+                        <button x-show="currentUser?.role === 'admin'" @click="openModal('addSantri')" class="px-5 py-2.5 bg-clarioLime hover:bg-[#6ed915] text-black font-extrabold rounded-xl flex items-center gap-2 transition neon-glow-btn text-sm justify-center">
+                            <i class="fa-solid fa-plus"></i> Tambah Santri Baru
+                        </button>
+                    </div>
+
+                    <!-- Santri Table with File Storage & Edit Wali Kelas Actions -->
+                    <div class="bg-clarioCard rounded-2xl border border-clarioBorder overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-black border-b border-clarioBorder text-clarioMuted text-xs font-bold uppercase tracking-wider">
+                                        <th class="px-6 py-4">NIS</th>
+                                        <th class="px-6 py-4">Nama Santri</th>
+                                        <th class="px-6 py-4">Kelas</th>
+                                        <th class="px-6 py-4">Wali Kelas (Perwalian)</th>
+                                        <th class="px-6 py-4 text-center">Berkas Dokumen</th>
+                                        <th class="px-6 py-4 text-center">Aksi & Mutasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-clarioBorder text-sm">
+                                    <template x-for="s in getFilteredSantri('aktif')" :key="s.id">
+                                        <tr class="hover:bg-clarioCardHover transition">
+                                            <td class="px-6 py-4 font-semibold text-clarioLime" x-text="s.nis"></td>
+                                            <td class="px-6 py-4">
+                                                <div class="font-extrabold text-white" x-text="s.nama"></div>
+                                                <span :class="s.gender === 'Laki-laki' ? 'text-cyan-400' : 'text-pink-400'" class="text-[10px] uppercase font-bold" x-text="s.gender"></span>
+                                            </td>
+                                            <td class="px-6 py-4 font-bold text-white" x-text="s.kelas"></td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-clarioMuted" x-text="s.walikelas"></span>
+                                                    <!-- Quick Edit Wali Button (Admin restricted) -->
+                                                    <button x-show="currentUser?.role === 'admin'" @click="triggerEditWali(s)" class="text-clarioLime hover:text-white p-1 hover:bg-[#222] rounded transition" title="Ganti Wali Kelas">
+                                                        <i class="fa-solid fa-pen text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <button @click="triggerManageBerkas(s)" class="px-3 py-1.5 bg-black border border-clarioBorder hover:border-clarioLime text-xs font-bold rounded-lg inline-flex items-center gap-1.5 transition">
+                                                    <i class="fa-solid fa-folder-open text-clarioLime"></i>
+                                                    <span x-text="s.berkas?.length ? s.berkas.length + ' Berkas' : 'Unggah Berkas'"></span>
+                                                </button>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <button @click="openMonitoringModal(s)" class="p-2 bg-black border border-clarioBorder text-clarioLime rounded-lg hover:bg-clarioCardHover hover:text-white transition" title="Log Monitoring">
+                                                        <i class="fa-solid fa-chart-line"></i>
+                                                    </button>
+                                                    <!-- Mutasi & Hapus Actions restricted for Admins only -->
+                                                    <template x-if="currentUser?.role === 'admin'">
+                                                        <div class="flex items-center gap-2">
+                                                            <button @click="triggerSantriKeluar(s)" class="p-2 bg-black border border-clarioBorder text-amber-500 rounded-lg hover:bg-clarioCardHover hover:text-white transition" title="Pindah Status Keluar">
+                                                                <i class="fa-solid fa-user-minus"></i>
+                                                            </button>
+                                                            <button @click="triggerSantriAlumni(s)" class="p-2 bg-black border border-clarioBorder text-blue-400 rounded-lg hover:bg-clarioCardHover hover:text-white transition" title="Luluskan sebagai Alumni">
+                                                                <i class="fa-solid fa-graduation-cap"></i>
+                                                            </button>
+                                                            <button @click="deleteSantri(s.id)" class="p-2 bg-black border border-clarioBorder text-red-500 rounded-lg hover:bg-clarioCardHover hover:text-white transition" title="Hapus Permanen">
+                                                                <i class="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="getFilteredSantri('aktif').length === 0">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-12 text-clarioMuted">Tidak ada data santri aktif ditemukan.</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. DATA SANTRI KELUAR -->
+                <div x-show="currentTab === 'keluar'" x-cloak class="space-y-6">
+                    <div class="bg-clarioCard p-5 rounded-2xl border border-clarioBorder flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="relative w-full max-w-md">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-clarioMuted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input x-model="searchQuery" type="text" placeholder="Cari santri keluar..." class="w-full pl-10 pr-4 py-2.5 bg-black border border-clarioBorder rounded-xl focus:ring-1 focus:ring-clarioLime focus:border-clarioLime focus:outline-none text-sm text-white placeholder-clarioMuted transition">
+                        </div>
+                        <!-- Direct off-board registrations only for admin -->
+                        <button x-show="currentUser?.role === 'admin'" @click="openModal('addSantriKeluarLangsung')" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-xl flex items-center gap-2 transition text-sm justify-center">
+                            <i class="fa-solid fa-user-xmark"></i> Catat Santri Keluar Langsung
+                        </button>
+                    </div>
+
+                    <div class="bg-clarioCard rounded-2xl border border-clarioBorder overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-black border-b border-clarioBorder text-clarioMuted text-xs font-bold uppercase tracking-wider">
+                                        <th class="px-6 py-4">NIS</th>
+                                        <th class="px-6 py-4">Nama Santri</th>
+                                        <th class="px-6 py-4">Kelas Terakhir</th>
+                                        <th class="px-6 py-4">Tanggal Keluar</th>
+                                        <th class="px-6 py-4">Alasan Keluar</th>
+                                        <th x-show="currentUser?.role === 'admin'" class="px-6 py-4 text-center">Status Pemulihan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-clarioBorder text-sm">
+                                    <template x-for="s in getFilteredSantri('keluar')" :key="s.id">
+                                        <tr class="hover:bg-clarioCardHover transition">
+                                            <td class="px-6 py-4 font-semibold text-clarioLime" x-text="s.nis"></td>
+                                            <td class="px-6 py-4 font-extrabold text-white" x-text="s.nama"></td>
+                                            <td class="px-6 py-4 font-bold text-white" x-text="s.kelas"></td>
+                                            <td class="px-6 py-4 text-clarioMuted" x-text="formatDate(s.tanggal_keluar)"></td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-3 py-1 bg-red-950/40 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold" x-text="s.alasan_keluar"></span>
+                                            </td>
+                                            <td x-show="currentUser?.role === 'admin'" class="px-6 py-4 text-center">
+                                                <button @click="restoreToAktif(s.id)" class="px-3 py-1.5 bg-black hover:bg-clarioLime hover:text-black text-clarioLime text-xs font-extrabold border border-clarioBorder rounded-xl transition">
+                                                    Aktifkan Kembali
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="getFilteredSantri('keluar').length === 0">
+                                        <tr>
+                                            <td :colspan="currentUser?.role === 'admin' ? 6 : 5" class="text-center py-12 text-clarioMuted">Tidak ada catatan santri keluar.</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. ALUMNI -->
+                <div x-show="currentTab === 'alumni'" x-cloak class="space-y-6">
+                    <div class="bg-clarioCard p-5 rounded-2xl border border-clarioBorder flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="relative w-full max-w-md">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-clarioMuted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input x-model="searchQuery" type="text" placeholder="Cari alumni..." class="w-full pl-10 pr-4 py-2.5 bg-black border border-clarioBorder rounded-xl focus:ring-1 focus:ring-clarioLime focus:border-clarioLime focus:outline-none text-sm text-white placeholder-clarioMuted transition">
+                        </div>
+                    </div>
+
+                    <!-- Alumni Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <template x-for="s in getFilteredSantri('alumni')" :key="s.id">
+                            <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder flex flex-col justify-between hover:border-neutral-700 transition duration-300">
+                                <div>
+                                    <div class="flex items-start justify-between">
+                                        <div class="w-12 h-12 rounded-xl bg-[#1c1c1c] text-clarioLime border border-clarioBorder flex items-center justify-center text-lg font-extrabold" x-text="s.nama.slice(0, 2).toUpperCase()"></div>
+                                        <span class="px-3.5 py-1 bg-black text-clarioLime border border-clarioBorder rounded-full text-xs font-extrabold" x-text="'Lulus ' + s.tahun_lulus"></span>
+                                    </div>
+                                    <h4 class="text-lg font-extrabold text-white mt-4" x-text="s.nama"></h4>
+                                    <p class="text-xs text-clarioMuted mb-2" x-text="'NIS: ' + s.nis"></p>
+                                    <div class="mt-4 p-3.5 bg-black border border-clarioBorder rounded-xl text-sm">
+                                        <span class="text-[10px] text-clarioMuted block uppercase tracking-wider font-extrabold">Rencana Aktivitas</span>
+                                        <span class="font-bold text-white mt-1 block" x-text="s.tujuan_alumni || 'Bekerja / Kuliah (Belum Terisi)'"></span>
+                                    </div>
+                                </div>
+                                <div class="mt-6 pt-4 border-t border-clarioBorder flex items-center justify-between text-xs">
+                                    <span class="text-clarioMuted">Penghafal <strong class="text-clarioLime font-bold" x-text="s.tahfidz"></strong> Juz</span>
+                                    <button x-show="currentUser?.role === 'admin'" @click="restoreToAktif(s.id)" class="text-red-400 hover:text-red-300 hover:underline font-extrabold">Batalkan Lulus</button>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="getFilteredSantri('alumni').length === 0">
+                            <div class="col-span-full text-center py-12 text-clarioMuted">Tidak ada data alumni.</div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 5. WALI KELAS & VISITASI -->
+                <div x-show="currentTab === 'walikelas'" x-cloak class="space-y-6">
+                    <!-- Dynamic column layout depending on role (Wali Kelas logged in has full-width detail view) -->
+                    <div class="grid grid-cols-1 gap-8" :class="currentUser?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'">
+                        
+                        <!-- Panel Kiri: List Wali Kelas (Hanya untuk Admin) -->
+                        <div class="lg:col-span-1 space-y-4 max-h-[700px] overflow-y-auto pr-2" x-show="currentUser?.role === 'admin'">
+                            <div class="bg-clarioCard p-4 rounded-xl border border-clarioBorder flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-1">Daftar Pengasuh</h3>
+                                    <p class="text-[11px] text-clarioMuted">Kelola pendamping perwalian.</p>
+                                </div>
+                                <button @click="openModal('addWaliKelas')" class="px-3 py-1.5 bg-clarioLime hover:bg-[#6ed915] text-black text-xs font-extrabold rounded-lg flex items-center gap-1.5 transition shrink-0">
+                                    <i class="fa-solid fa-plus text-[10px]"></i> Wali
+                                </button>
+                            </div>
+                            
+                            <template x-for="(w, idx) in waliKelasList" :key="w.id">
+                                <div @click="selectedWaliId = w.id" 
+                                     :class="selectedWaliId === w.id ? 'border-clarioLime bg-black shadow-[0_0_15px_rgba(123,242,26,0.15)]' : 'border-clarioBorder bg-clarioCard hover:border-neutral-700'" 
+                                     class="p-5 rounded-2xl border cursor-pointer transition duration-300 flex flex-col justify-between">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <!-- Stepper Visualizer matching Clario (image_dfe1f8.png) -->
+                                            <div class="flex items-center gap-1.5 mb-2">
+                                                <span class="w-2.5 h-2.5 rounded-full bg-clarioLime animate-pulse"></span>
+                                                <span class="text-[10px] uppercase font-bold tracking-widest text-clarioLime" x-text="'Ustadz/ah ' + (idx + 1)"></span>
+                                            </div>
+                                            <h4 class="font-extrabold text-white text-base" x-text="w.nama"></h4>
+                                            <p class="text-xs text-clarioMuted mt-0.5" x-text="'NIP: ' + w.nip"></p>
+                                        </div>
+                                        <div class="flex flex-col items-end gap-2 shrink-0">
+                                            <span class="text-xs font-bold px-2.5 py-1 bg-black border border-clarioBorder text-clarioLime rounded-lg" x-text="'Kelas ' + w.kelas_diajar"></span>
+                                            <!-- Hapus Wali Kelas Button (Only Admin) -->
+                                            <button @click.stop="deleteWaliKelas(w.id, w.nama)" class="p-1.5 text-red-500 hover:text-white hover:bg-red-950/40 rounded border border-transparent hover:border-red-900/50 transition text-xs" title="Hapus Wali Kelas">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-5 pt-3 border-t border-dashed border-clarioBorder flex items-center justify-between text-xs">
+                                        <span class="flex items-center gap-1.5 text-clarioMuted">
+                                            <i class="fa-solid fa-users text-clarioLime"></i>
+                                            <span class="font-bold text-white" x-text="getSantriByWali(w.nama) + ' Santri'"></span>
+                                        </span>
+                                        <span class="text-clarioLime font-extrabold flex items-center gap-1 hover:underline">
+                                            Kelola Binaan <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Panel Kanan: Detail Siswa & Visitasi -->
+                        <div :class="currentUser?.role === 'admin' ? 'lg:col-span-2' : 'lg:col-span-1'" class="bg-clarioCard rounded-3xl border border-clarioBorder p-6 lg:p-8 space-y-6 self-start">
+                            <template x-if="selectedWaliId">
+                                <div x-data="{ getWaliObj() { return waliKelasList.find(w => w.id === selectedWaliId) } }">
+                                    <!-- Header Detail -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-clarioBorder pb-6">
+                                        <div>
+                                            <span class="text-[10px] font-extrabold text-clarioLime tracking-widest uppercase block mb-1">Guru Pengampu & Perwalian</span>
+                                            <h3 class="text-2xl font-extrabold text-white" x-text="getWaliObj().nama"></h3>
+                                            <p class="text-xs text-clarioMuted mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                                                <span><i class="fa-solid fa-graduation-cap text-clarioLime mr-1.5"></i>Kelas Bimbingan: <strong class="text-white" x-text="getWaliObj().kelas_diajar"></strong></span>
+                                                <span><i class="fa-solid fa-phone text-clarioLime mr-1.5"></i>Kontak: <span class="text-white" x-text="getWaliObj().kontak"></span></span>
+                                            </p>
+                                        </div>
+                                        <div class="px-5 py-3 bg-black border border-clarioBorder rounded-2xl text-center self-start sm:self-center shrink-0 shadow-[0_0_10px_rgba(123,242,26,0.1)]">
+                                            <span class="text-[10px] text-clarioMuted font-bold block uppercase tracking-wider">Total Anggota</span>
+                                            <strong class="text-2xl font-extrabold text-clarioLime" x-text="getSantriByWali(getWaliObj().nama)"></strong>
+                                        </div>
+                                    </div>
+
+                                    <!-- Table Daftar Santri Perwalian & Home Visit logs -->
+                                    <div class="mt-6">
+                                        <h4 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                            <i class="fa-solid fa-clipboard-user text-clarioLime"></i> Daftar Santri Aktif & Rekam Visitasi
+                                        </h4>
+                                        <div class="overflow-x-auto rounded-xl border border-clarioBorder">
+                                            <table class="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr class="bg-black border-b border-clarioBorder text-clarioMuted text-xs font-bold uppercase tracking-wider">
+                                                        <th class="px-5 py-3.5">NIS</th>
+                                                        <th class="px-5 py-3.5">Nama Lengkap</th>
+                                                        <th class="px-5 py-3.5 text-center">Visit Terakhir</th>
+                                                        <th class="px-5 py-3.5 text-center">Log Kunjungan</th>
+                                                        <th class="px-5 py-3.5 text-center">Aksi Visit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-clarioBorder text-sm">
+                                                    <template x-for="s in santriList.filter(s => s.status === 'aktif' && s.walikelas === getWaliObj().nama)" :key="s.id">
+                                                        <tr class="hover:bg-clarioCardHover transition">
+                                                            <td class="px-5 py-3.5 font-semibold text-clarioLime" x-text="s.nis"></td>
+                                                            <td class="px-5 py-3.5">
+                                                                <div class="font-extrabold text-white" x-text="s.nama"></div>
+                                                                <span class="text-[10px] text-clarioMuted" x-text="'Tahfidz: ' + s.tahfidz + ' Juz'"></span>
+                                                            </td>
+                                                            <td class="px-5 py-3.5 text-center text-xs text-clarioMuted">
+                                                                <span x-text="s.visits && s.visits.length ? formatDate(s.visits[s.visits.length - 1].tanggal) : 'Belum Pernah'"></span>
+                                                            </td>
+                                                            <td class="px-5 py-3.5 text-center">
+                                                                <span class="px-2.5 py-1 bg-[#1a1a1a] text-clarioLime border border-clarioBorder rounded-lg font-bold text-xs" x-text="(s.visits ? s.visits.length : 0) + ' Kali'"></span>
+                                                            </td>
+                                                            <td class="px-5 py-3.5 text-center">
+                                                                <button @click="triggerManageVisit(s)" class="text-xs font-extrabold text-clarioLime hover:text-white flex items-center gap-1 mx-auto bg-black px-3 py-1.5 border border-clarioBorder rounded-xl hover:bg-clarioLime hover:text-black transition duration-200">
+                                                                    <i class="fa-solid fa-house-chimney-user"></i> Catat / Lihat Visit
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <template x-if="santriList.filter(s => s.status === 'aktif' && s.walikelas === getWaliObj().nama).length === 0">
+                                                        <tr>
+                                                            <td colspan="5" class="text-center py-12 text-clarioMuted">Belum ada santri aktif yang terdaftar di perwalian ini.</td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="!selectedWaliId">
+                                <div class="flex flex-col items-center justify-center py-20 text-clarioMuted text-center">
+                                    <div class="w-16 h-16 rounded-full bg-black border border-clarioBorder flex items-center justify-center text-clarioMuted mb-4 shadow-inner">
+                                        <i class="fa-solid fa-chalkboard-user text-3xl text-clarioLime"></i>
+                                    </div>
+                                    <p class="font-extrabold text-white text-lg">Wali Kelas Belum Dipilih</p>
+                                    <p class="text-xs text-clarioMuted max-w-xs mt-1">Silakan klik salah satu daftar wali kelas di sebelah kiri untuk mengelola visitasi siswa.</p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. MONITORING -->
+                <div x-show="currentTab === 'monitoring'" x-cloak class="space-y-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Update Monitoring Status Card -->
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder lg:col-span-1 space-y-6">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-pen-to-square text-clarioLime"></i> Log Harian Santri
+                                </h3>
+                                <p class="text-xs text-clarioMuted mt-1">Pilih santri untuk mengupdate rekam hafalan, kedisiplinan, atau catatan kesehatannya.</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-extrabold text-white uppercase tracking-wider mb-1.5">Pilih Santri Aktif</label>
+                                    <select x-model="selectedMonitoringId" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-clarioLime focus:border-clarioLime text-white">
+                                        <option value="">-- Pilih Santri --</option>
+                                        <!-- Filtering active students list: admins see all, wali kelas sees their own only -->
+                                        <template x-for="s in santriList.filter(s => s.status === 'aktif' && (currentUser?.role === 'admin' || s.walikelas === currentUser?.name))" :key="s.id">
+                                            <option :value="s.id" x-text="s.nama + ' (' + s.kelas + ')'"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <template x-if="selectedMonitoringId">
+                                    <div class="space-y-5 pt-4 border-t border-clarioBorder" x-data="{
+                                        tempTahfidz: '',
+                                        tempPoin: '',
+                                        tempKesehatan: ''
+                                    }" x-init="
+                                        $watch('selectedMonitoringId', id => {
+                                            const s = santriList.find(x => x.id == id);
+                                            if(s) {
+                                                tempTahfidz = s.tahfidz;
+                                                tempPoin = s.pelanggaran;
+                                                tempKesehatan = s.kesehatan;
+                                            }
+                                        })
+                                    ">
+                                        <!-- Update Hafalan -->
+                                        <div>
+                                            <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1.5">Update Tahfidz (Jumlah Juz)</label>
+                                            <div class="flex gap-2">
+                                                <input type="number" min="0" max="30" x-model="tempTahfidz" class="flex-1 bg-black border border-clarioBorder px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-clarioLime text-white">
+                                                <button @click="updateMonitoringField('tahfidz', tempTahfidz)" class="px-4 py-2 bg-clarioLime hover:bg-[#6ed915] text-black rounded-xl text-xs font-extrabold transition">Simpan</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Update Poin Pelanggaran -->
+                                        <div>
+                                            <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1.5">Poin Pelanggaran Kedisiplinan</label>
+                                            <div class="flex gap-2">
+                                                <input type="number" min="0" x-model="tempPoin" class="flex-1 bg-black border border-clarioBorder px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-clarioLime text-white">
+                                                <button @click="updateMonitoringField('pelanggaran', tempPoin)" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-extrabold transition">Simpan</button>
+                                            </div>
+                                            <p class="text-[10px] text-clarioMuted mt-1">*Batas bimbingan khusus adalah akumulasi diatas 50 poin.</p>
+                                        </div>
+
+                                        <!-- Update Catatan Kesehatan -->
+                                        <div>
+                                            <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1.5">Status Kesehatan</label>
+                                            <div class="flex gap-2">
+                                                <input type="text" x-model="tempKesehatan" placeholder="Sehat / Sakit (Gejala)" class="flex-1 bg-black border border-clarioBorder px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-clarioLime text-white">
+                                                <button @click="updateMonitoringField('kesehatan', tempKesehatan)" class="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-black rounded-xl text-xs font-extrabold transition">Simpan</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Realtime Evaluation List -->
+                        <div class="bg-clarioCard p-6 rounded-2xl border border-clarioBorder lg:col-span-2 space-y-6">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-list text-clarioLime"></i> Rekap Monitoring Seluruh Santri Aktif
+                            </h3>
+
+                            <div class="overflow-x-auto rounded-xl border border-clarioBorder">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-black border-b border-clarioBorder text-clarioMuted text-xs font-bold uppercase tracking-wider">
+                                            <th class="px-4 py-3">Nama Santri</th>
+                                            <th class="px-4 py-3">Kelas</th>
+                                            <th class="px-4 py-3 text-center">Tahfidz (Juz)</th>
+                                            <th class="px-4 py-3 text-center">Poin Disiplin</th>
+                                            <th class="px-4 py-3">Kondisi Kesehatan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-clarioBorder text-xs">
+                                        <template x-for="s in santriList.filter(s => s.status === 'aktif')" :key="s.id">
+                                            <tr class="hover:bg-clarioCardHover transition">
+                                                <td class="px-4 py-3.5 font-bold text-white" x-text="s.nama"></td>
+                                                <td class="px-4 py-3.5 text-clarioMuted" x-text="s.kelas"></td>
+                                                <td class="px-4 py-3.5 text-center">
+                                                    <span class="px-2.5 py-1 bg-black border border-clarioBorder text-clarioLime rounded-lg font-bold" x-text="s.tahfidz + ' Juz'"></span>
+                                                </td>
+                                                <td class="px-4 py-3.5 text-center">
+                                                    <span :class="s.pelanggaran > 15 ? 'bg-red-950/40 text-red-400 border border-red-900/50' : 'bg-[#1a1a1a] text-clarioMuted border border-clarioBorder'" class="px-2.5 py-1 rounded-lg font-bold" x-text="s.pelanggaran + ' Poin'"></span>
+                                                </td>
+                                                <td class="px-4 py-3.5">
+                                                    <span :class="s.kesehatan.toLowerCase().includes('sakit') || s.kesehatan.toLowerCase().includes('demam') ? 'bg-amber-950/40 text-amber-400 border border-amber-900/50' : 'bg-[#122a10] text-clarioLime border border-clarioLime/30'" class="px-2.5 py-1 border rounded-full font-bold" x-text="s.kesehatan || 'Sehat'"></span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div> <!-- Close isLoggedIn container wrapper -->
+
+    <!-- MODALS SECTION -->
+    
+    <!-- A. MODAL TAMBAH SANTRI -->
+    <div x-show="modalOpen === 'addSantri'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 transition duration-300" @keydown.escape.window="modalOpen = null">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-lg shadow-2xl p-8 border border-clarioBorder transform transition scale-100">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-6">
+                <h3 class="text-xl font-bold text-white">Form Tambah Santri</h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="addSantri()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Nama Lengkap</label>
+                    <input x-model="formNewSantri.nama" type="text" required placeholder="Contoh: Muhammad Ali" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">NIS (Nomor Induk)</label>
+                        <input x-model="formNewSantri.nis" type="text" required placeholder="8 digit angka" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Jenis Kelamin</label>
+                        <select x-model="formNewSantri.gender" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Pilih Kelas</label>
+                        <select x-model="formNewSantri.kelas" @change="autoSetWali()" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                            <option value="10-A">10-A</option>
+                            <option value="10-B">10-B</option>
+                            <option value="11-A">11-A</option>
+                            <option value="11-B">11-B</option>
+                            <option value="12-A">12-A</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Pilih Wali Kelas</label>
+                        <select x-model="formNewSantri.walikelas" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                            <option value="Belum Ditentukan">-- Pilih Wali Kelas --</option>
+                            <template x-for="w in waliKelasList" :key="w.id">
+                                <option :value="w.nama" x-text="w.nama + ' (' + w.kelas_diajar + ')'"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Tanggal Masuk</label>
+                    <input x-model="formNewSantri.tanggal_masuk" type="date" required class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                </div>
+
+                <div class="pt-6 flex justify-end gap-3 border-t border-clarioBorder mt-6">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2.5 border border-clarioBorder bg-black hover:bg-neutral-900 text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-clarioLime hover:bg-[#6ed915] text-black rounded-xl text-xs font-bold transition neon-glow-btn">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- B. MODAL EDIT/GANTI WALI KELAS -->
+    <div x-show="modalOpen === 'editWaliKelas'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-md shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white">Mutasi Wali Kelas</h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-sm text-clarioMuted mb-4">Ubah wali perwalian untuk santri <strong class="text-white" x-text="selectedSantriForAction?.nama"></strong>.</p>
+            
+            <form @submit.prevent="updateWaliKelas()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Pilih Wali Kelas Baru</label>
+                    <select x-model="tempNewWali" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                        <template x-for="w in waliKelasList" :key="w.id">
+                            <option :value="w.nama" x-text="w.nama + ' (Kelas ' + w.kelas_diajar + ')'"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end gap-3 border-t border-clarioBorder">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2.5 border border-clarioBorder bg-black text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-clarioLime hover:bg-[#6ed915] text-black rounded-xl text-xs font-extrabold transition">Update Wali</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- C. MODAL KELOLA BERKAS/ARSIP DOKUMEN -->
+    <div x-show="modalOpen === 'manageBerkas'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-lg shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-folder-closed text-clarioLime"></i> Arsip Berkas Santri
+                </h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-clarioMuted mb-6">Kelola dokumen kelengkapan administrasi untuk santri <strong class="text-white" x-text="selectedSantriForAction?.nama"></strong> (NIS: <span x-text="selectedSantriForAction?.nis"></span>).</p>
+
+            <!-- File Upload Simulation Area -->
+            <div class="p-5 border border-dashed border-clarioBorder rounded-2xl bg-black/50 text-center space-y-3">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-clarioLime"></i>
+                <div class="text-xs text-clarioMuted">
+                    <label class="cursor-pointer text-clarioLime font-bold hover:underline">
+                        Pilih file berkas
+                        <input type="file" class="hidden" @change="simulateFileUpload($event)">
+                    </label>
+                    atau klik untuk simulasi unggah dokumen santri.
+                </div>
+            </div>
+
+            <!-- List of Files / Archives -->
+            <div class="mt-6 space-y-3">
+                <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Berkas Terarsipkan</h4>
+                <div class="max-h-48 overflow-y-auto space-y-2 pr-1">
+                    <template x-for="b in selectedSantriForAction?.berkas" :key="b.id">
+                        <div class="p-3 bg-black border border-clarioBorder rounded-xl flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-file-pdf text-red-500 text-lg"></i>
+                                <div>
+                                    <p class="font-bold text-white" x-text="b.nama"></p>
+                                    <p class="text-[10px] text-clarioMuted" x-text="formatDate(b.tanggal)"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <a :href="b.url || '#'" download class="p-1.5 text-clarioLime hover:text-white transition" title="Unduh File">
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                                <button @click="deleteBerkas(b.id)" class="p-1.5 text-red-500 hover:text-white transition" title="Hapus Berkas">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="!selectedSantriForAction?.berkas?.length">
+                        <div class="text-center py-6 text-xs text-clarioMuted bg-black/35 rounded-xl border border-clarioBorder">
+                            Belum ada berkas terunggah untuk santri ini.
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- D. MODAL TAMBAH SANTRI KELUAR LANGSUNG -->
+    <div x-show="modalOpen === 'addSantriKeluarLangsung'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-lg shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white">Form Keluar Santri Langsung</h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-clarioMuted mb-4">Gunakan form ini untuk mendaftarkan santri yang sudah berstatus keluar secara langsung ke dalam sistem database.</p>
+
+            <form @submit.prevent="addSantriKeluarLangsung()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Nama Lengkap</label>
+                    <input x-model="formDirectKeluar.nama" type="text" required placeholder="Contoh: Ahmad Maulana" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">NIS (Nomor Induk)</label>
+                        <input x-model="formDirectKeluar.nis" type="text" required placeholder="8 digit" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Kelas Terakhir</label>
+                        <select x-model="formDirectKeluar.kelas" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                            <option value="10-A">10-A</option>
+                            <option value="10-B">10-B</option>
+                            <option value="11-A">11-A</option>
+                            <option value="11-B">11-B</option>
+                            <option value="12-A">12-A</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Tanggal Keluar</label>
+                        <input x-model="formDirectKeluar.tanggal_keluar" type="date" required class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Alasan Keluar</label>
+                        <input x-model="formDirectKeluar.alasan_keluar" type="text" required placeholder="Contoh: Sakit / Pindah" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                    </div>
+                </div>
+
+                <div class="pt-6 flex justify-end gap-3 border-t border-clarioBorder mt-6">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2.5 border border-clarioBorder bg-black text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition">Simpan Santri Keluar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- E. MODAL KELOLA VISITASI & KUNJUNGAN WALI KELAS -->
+    <div x-show="modalOpen === 'manageVisit'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-xl shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-house-chimney-user text-clarioLime"></i> Log Visitasi & Kunjungan
+                </h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-clarioMuted mb-6">Dokumentasikan agenda bimbingan/home-visit wali kelas untuk santri <strong class="text-white" x-text="selectedSantriForAction?.nama"></strong>.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Form Input Kunjungan Baru -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-extrabold text-white uppercase tracking-wider border-b border-clarioBorder pb-1.5">Kunjungan Baru</h4>
+                    <form @submit.prevent="addVisitLog()" class="space-y-3">
+                        <div>
+                            <label class="block text-[10px] font-extrabold text-clarioMuted uppercase mb-1">Tanggal Kunjungan</label>
+                            <input x-model="formVisit.tanggal" type="date" required class="w-full bg-black border border-clarioBorder px-3 py-2 rounded-lg text-xs text-white focus:ring-1 focus:ring-clarioLime">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-extrabold text-clarioMuted uppercase mb-1">Tujuan / Keperluan</label>
+                            <select x-model="formVisit.tujuan" class="w-full bg-black border border-clarioBorder px-3 py-2 rounded-lg text-xs text-white focus:ring-1 focus:ring-clarioLime">
+                                <option value="Home Visit (Kunjungan Rumah)">Home Visit (Kunjungan Rumah)</option>
+                                <option value="Konseling Akademik">Konseling Akademik</option>
+                                <option value="Pendampingan Hafalan">Pendampingan Hafalan</option>
+                                <option value="Kunjungan Kesehatan">Kunjungan Kesehatan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-extrabold text-clarioMuted uppercase mb-1">Hasil & Catatan Wali Kelas</label>
+                            <textarea x-model="formVisit.catatan" required rows="3" placeholder="Sebutkan ringkasan perkembangan kunjungan..." class="w-full bg-black border border-clarioBorder px-3 py-2 rounded-lg text-xs text-white focus:ring-1 focus:ring-clarioLime"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-2 bg-clarioLime hover:bg-[#6ed915] text-black font-extrabold rounded-lg text-xs transition">Simpan Visitasi</button>
+                    </form>
+                </div>
+
+                <!-- Histori Kunjungan -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-extrabold text-white uppercase tracking-wider border-b border-clarioBorder pb-1.5">Riwayat Kunjungan</h4>
+                    <div class="max-h-60 overflow-y-auto space-y-2.5 pr-1">
+                        <template x-for="v in selectedSantriForAction?.visits" :key="v.id">
+                            <div class="p-3 bg-black border border-clarioBorder rounded-xl text-xs space-y-1">
+                                <div class="flex items-center justify-between text-clarioLime font-bold">
+                                    <span x-text="v.tujuan"></span>
+                                    <span class="text-[10px] text-clarioMuted" x-text="formatDate(v.tanggal)"></span>
+                                </div>
+                                <p class="text-white leading-relaxed" x-text="v.catatan"></p>
+                            </div>
+                        </template>
+                        <template x-if="!selectedSantriForAction?.visits?.length">
+                            <div class="text-center py-12 text-xs text-clarioMuted bg-black/35 rounded-xl border border-clarioBorder">
+                                Belum ada riwayat bimbingan/visitasi untuk santri ini.
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- F. MODAL PINDAH SANTRI KELUAR (DARI AKTIF) -->
+    <div x-show="modalOpen === 'keluarSantri'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-md shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white">Form Santri Keluar</h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="mb-4 text-sm text-clarioMuted">
+                Memindahkan santri <strong class="text-white font-bold" x-text="selectedSantriForAction?.nama"></strong> menjadi berstatus <strong class="text-red-400">Keluar / Tidak Aktif</strong>.
+            </div>
+
+            <form @submit.prevent="processSantriKeluar()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Tanggal Keluar</label>
+                    <input x-model="actionKeluar.tanggal" type="date" required class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Alasan Keluar</label>
+                    <textarea x-model="actionKeluar.alasan" required rows="3" placeholder="Sebutkan alasan (contoh: Mengundurkan Diri, Pindah Sekolah)" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime"></textarea>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-clarioBorder mt-6">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2.5 border border-clarioBorder bg-black text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition">Keluarkan Santri</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- G. MODAL PINDAH STATUS ALUMNI (LULUS) -->
+    <div x-show="modalOpen === 'alumniSantri'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-md shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white">Kelulusan Alumni</h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="mb-4 text-sm text-clarioMuted">
+                Selamat! Luluskan santri <strong class="text-white font-bold" x-text="selectedSantriForAction?.nama"></strong> sebagai alumni pesantren.
+            </div>
+
+            <form @submit.prevent="processSantriAlumni()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Tahun Kelulusan</label>
+                    <input x-model="actionAlumni.tahun" type="number" required placeholder="Contoh: 2026" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Tujuan Pasca Lulus</label>
+                    <input x-model="actionAlumni.tujuan" type="text" placeholder="Contoh: Kuliah di Al-Azhar Kairo, Menghafal Alquran" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-clarioBorder mt-6">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2.5 border border-clarioBorder bg-black text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-clarioLime hover:bg-[#6ed915] text-black rounded-xl text-xs font-extrabold transition">Set Alumni</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- H. MODAL TAMBAH TAHUN AJARAN -->
+    <div x-show="modalOpen === 'addTahunAjaran'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-sm shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-plus text-clarioLime"></i> Tambah Tahun Ajaran
+                </h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-clarioMuted mb-5">Tambahkan rentang periode Tahun Ajaran baru yang ingin dimasukkan ke dalam basis data SIMS.</p>
+
+            <div x-data="{ newTAInput: '' }">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1.5">Tahun Ajaran Baru</label>
+                        <input x-model="newTAInput" type="text" required placeholder="Contoh: 2027/2028" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-clarioLime">
+                    </div>
+                </div>
+                <div class="pt-6 flex justify-end gap-3 border-t border-clarioBorder mt-6">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2 bg-black border border-clarioBorder text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="button" @click="if (newTAInput) { addTahunAjaran(newTAInput); modalOpen = null; }" class="px-5 py-2 bg-clarioLime hover:bg-[#6ed915] text-black rounded-xl text-xs font-extrabold transition shadow-[0_0_10px_rgba(123,242,26,0.3)]">Simpan TA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- I. MODAL TAMBAH WALI KELAS -->
+    <div x-show="modalOpen === 'addWaliKelas'" x-cloak class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50" @keydown.escape.window="modalOpen = null">
+        <div class="bg-clarioCard rounded-3xl w-full max-w-md shadow-2xl p-8 border border-clarioBorder">
+            <div class="flex justify-between items-center border-b border-clarioBorder pb-4 mb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-clarioLime"></i> Tambah Wali Kelas
+                </h3>
+                <button @click="modalOpen = null" class="w-8 h-8 rounded-full hover:bg-black text-clarioMuted flex items-center justify-center transition border border-clarioBorder">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form @submit.prevent="addWaliKelas()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Nama Lengkap Wali Kelas</label>
+                    <input x-model="formNewWali.nama" type="text" required placeholder="Contoh: Ustadz Ahmad Fauzi" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">NIP / ID</label>
+                        <input x-model="formNewWali.nip" type="text" required placeholder="12 digit angka" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Bimbingan Kelas</label>
+                        <select x-model="formNewWali.kelas_diajar" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm text-white focus:ring-1 focus:ring-clarioLime">
+                            <option value="10-A">10-A</option>
+                            <option value="10-B">10-B</option>
+                            <option value="11-A">11-A</option>
+                            <option value="11-B">11-B</option>
+                            <option value="12-A">12-A</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-clarioMuted uppercase mb-1">Nomor Kontak / WhatsApp</label>
+                    <input x-model="formNewWali.kontak" type="text" required placeholder="Contoh: 0812-3456-7890" class="w-full bg-black border border-clarioBorder px-4 py-2.5 rounded-xl text-sm focus:ring-1 focus:ring-clarioLime text-white">
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-clarioBorder mt-6">
+                    <button type="button" @click="modalOpen = null" class="px-4 py-2.5 border border-clarioBorder bg-black text-white rounded-xl text-xs font-bold transition">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-clarioLime hover:bg-[#6ed915] text-black rounded-xl text-xs font-extrabold transition shadow-[0_0_10px_rgba(123,242,26,0.3)]">Simpan Wali</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT STATE CONTROLLER -->
+    <script>
+        function appData() {
+            return {
+                currentTab: 'dashboard',
+                modalOpen: null,
+                searchQuery: '',
+                classFilter: 'semua',
+                selectedMonitoringId: '',
+                selectedSantriForAction: null,
+                selectedWaliId: 1, // Default selected wali kelas
+                tempNewWali: '', // Temp value when mutating wali kelas
+
+                // Authentication and session states
+                isLoggedIn: false,
+                currentUser: null,
+                loginRole: 'admin',
+                loginUsername: '',
+                loginPassword: '',
+                loginWaliId: '',
+                loginError: '',
+
+                // Academic Year Management States
+                selectedTahunAjaran: '2026/2027',
+                daftarTahunAjaran: ['2024/2025', '2025/2026', '2026/2027', '2027/2028'],
+
+                // Charts Reference to prevent duplications
+                chartDistributionInstance: null,
+                chartTrendsInstance: null,
+
+                // State forms
+                formNewSantri: {
+                    nama: '',
+                    nis: '',
+                    gender: 'Laki-laki',
+                    kelas: '10-A',
+                    walikelas: 'Ustadz Ahmad Fauzi',
+                    tanggal_masuk: ''
+                },
+                formDirectKeluar: {
+                    nama: '',
+                    nis: '',
+                    kelas: '10-A',
+                    tanggal_keluar: '',
+                    alasan_keluar: ''
+                },
+                formVisit: {
+                    tanggal: '',
+                    tujuan: 'Home Visit (Kunjungan Rumah)',
+                    catatan: ''
+                },
+                actionKeluar: {
+                    tanggal: '',
+                    alasan: ''
+                },
+                actionAlumni: {
+                    tahun: new Date().getFullYear(),
+                    tujuan: ''
+                },
+                // Form Wali Kelas Baru
+                formNewWali: {
+                    nama: '',
+                    nip: '',
+                    kelas_diajar: '10-A',
+                    kontak: ''
+                },
+
+                // Wali Kelas Dynamic Array
+                waliKelasList: [],
+
+                // Master Santri List
+                santriList: [],
+
+                // Initializer
+                initData() {
+                    const localData = localStorage.getItem('sims_santri_db_clario_v3');
+                    if (localData) {
+                        this.santriList = JSON.parse(localData);
+                    } else {
+                        // Advanced dynamic seed database
+                        this.santriList = [
+                            { id: 1, nama: 'Ahmad Fahri', nis: '26001001', gender: 'Laki-laki', kelas: '10-A', walikelas: 'Ustadz Ahmad Fauzi', tanggal_masuk: '2026-01-15', status: 'aktif', tahfidz: 5, pelanggaran: 0, kesehatan: 'Sehat', berkas: [{ id: 101, nama: 'Kartu Keluarga.pdf', tanggal: '2026-01-15', url: '#' }], visits: [{ id: 201, tanggal: '2026-02-10', tujuan: 'Pendampingan Hafalan', catatan: 'Progres tajwid bagus, hafalan terpelihara' }] },
+                            { id: 2, nama: 'Aisyah Humaira', nis: '26001002', gender: 'Perempuan', kelas: '10-B', walikelas: 'Ustadzah Siti Aminah', tanggal_masuk: '2026-02-16', status: 'aktif', tahfidz: 8, pelanggaran: 10, kesehatan: 'Sehat', berkas: [], visits: [] },
+                            { id: 3, nama: 'Muhammad Azhar', nis: '25002001', gender: 'Laki-laki', kelas: '11-A', walikelas: 'Ustadz Hamzah', tanggal_masuk: '2025-07-10', status: 'aktif', tahfidz: 12, pelanggaran: 55, kesehatan: 'Sakit flu ringan', berkas: [], visits: [{ id: 202, tanggal: '2026-05-04', tujuan: 'Home Visit (Kunjungan Rumah)', catatan: 'Berdiskusi dengan wali asuh mengenai kedisiplinan dan perbaikan poin pelanggaran.' }] },
+                            { id: 4, nama: 'Fatima Azzahra', nis: '25002002', gender: 'Perempuan', kelas: '11-B', walikelas: 'Ustadzah Fatimah', tanggal_masuk: '2025-07-12', status: 'aktif', tahfidz: 18, pelanggaran: 5, kesehatan: 'Sehat', berkas: [], visits: [] },
+                            { id: 5, nama: 'Zainuddin', nis: '24003001', gender: 'Laki-laki', kelas: '12-A', walikelas: 'Ustadz Yusuf', tanggal_masuk: '2024-07-05', status: 'keluar', tanggal_keluar: '2026-03-12', alasan_keluar: 'Pindah Domisili Orang Tua', tahfidz: 4, pelanggaran: 2, kesehatan: 'Sehat', berkas: [], visits: [] },
+                            { id: 6, nama: 'Ali bin Abi Thalib', nis: '23004001', gender: 'Laki-laki', kelas: 'Lulus', walikelas: 'Ustadz Yusuf', tanggal_masuk: '2023-07-01', status: 'alumni', tahun_lulus: 2025, tujuan_alumni: 'Melanjutkan di Al-Azhar Kairo, Mesir', tahfidz: 30, pelanggaran: 0, kesehatan: 'Sehat', berkas: [], visits: [] }
+                        ];
+                    }
+
+                    // Retrieve Wali Kelas database
+                    const localWali = localStorage.getItem('sims_wali_kelas_list_v3');
+                    if (localWali) {
+                        this.waliKelasList = JSON.parse(localWali);
+                    } else {
+                        this.waliKelasList = [
+                            { id: 1, nama: 'Ustadz Ahmad Fauzi', nip: '198703112015', kelas_diajar: '10-A', kontak: '0812-3456-7890' },
+                            { id: 2, nama: 'Ustadzah Siti Aminah', nip: '198904252016', kelas_diajar: '10-B', kontak: '0812-9876-5432' },
+                            { id: 3, nama: 'Ustadz Hamzah', nip: '198511022012', kelas_diajar: '11-A', kontak: '0813-1122-3344' },
+                            { id: 4, nama: 'Ustadzah Fatimah', nip: '199108152018', kelas_diajar: '11-B', kontak: '0813-5566-7788' },
+                            { id: 5, nama: 'Ustadz Yusuf', nip: '198010102008', kelas_diajar: '12-A', kontak: '0811-9900-1122' }
+                        ];
+                    }
+
+                    // Retrieve Academic Year custom settings if present
+                    const localTA = localStorage.getItem('sims_daftar_ta');
+                    if (localTA) {
+                        this.daftarTahunAjaran = JSON.parse(localTA);
+                    }
+                    const localSelectedTA = localStorage.getItem('sims_selected_ta');
+                    if (localSelectedTA) {
+                        this.selectedTahunAjaran = localSelectedTA;
+                    }
+
+                    // Retrieve Active User Session
+                    const activeSession = localStorage.getItem('sims_active_session');
+                    if (activeSession) {
+                        this.currentUser = JSON.parse(activeSession);
+                        this.isLoggedIn = true;
+                        
+                        // If homeroom teacher, lock their view to their own perwalian profile
+                        if (this.currentUser.role === 'walikelas') {
+                            this.selectedWaliId = this.currentUser.waliId;
+                        }
+                    }
+
+                    this.saveToStorage();
+                    this.autoSetWali();
+
+                    // Watch for tab change to reinitialize charts
+                    this.$watch('currentTab', value => {
+                        if (value === 'dashboard') {
+                            this.$nextTick(() => {
+                                this.renderCharts();
+                            });
+                        }
+                    });
+
+                    // Render charts initially if logged in
+                    this.$nextTick(() => {
+                        if (this.isLoggedIn) {
+                            this.renderCharts();
+                        }
+                    });
+                },
+
+                // Save State to LocalStorage
+                saveToStorage() {
+                    localStorage.setItem('sims_santri_db_clario_v3', JSON.stringify(this.santriList));
+                    localStorage.setItem('sims_wali_kelas_list_v3', JSON.stringify(this.waliKelasList));
+                    localStorage.setItem('sims_daftar_ta', JSON.stringify(this.daftarTahunAjaran));
+                    localStorage.setItem('sims_selected_ta', this.selectedTahunAjaran);
+                    // Dynamic redraw if in dashboard
+                    if (this.currentTab === 'dashboard' && this.isLoggedIn) {
+                        this.renderCharts();
+                    }
+                },
+
+                // Render ChartJS Elements with Custom Clario Accent Styles (Dark Theme support)
+                renderCharts() {
+                    const ctxDist = document.getElementById('chartClassDistribution');
+                    const ctxTrend = document.getElementById('chartInAndOutTrendsFullYear');
+
+                    if (!ctxDist || !ctxTrend) return;
+
+                    // Clean previous Chart.js instances to avoid canvas glitches
+                    if (this.chartDistributionInstance) {
+                        this.chartDistributionInstance.destroy();
+                    }
+                    if (this.chartTrendsInstance) {
+                        this.chartTrendsInstance.destroy();
+                    }
+
+                    // Compute distribution data
+                    const classes = ['10-A', '10-B', '11-A', '11-B', '12-A'];
+                    const dataDist = classes.map(cls => {
+                        return this.santriList.filter(s => s.status === 'aktif' && s.kelas === cls).length;
+                    });
+
+                    // Compute dynamic entries vs exits monthly (Jan - Des) for full year coverage
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                    const monthlyIn = Array(12).fill(0);
+                    const monthlyOut = Array(12).fill(0);
+
+                    this.santriList.forEach(s => {
+                        if (s.tanggal_masuk) {
+                            const monthIdx = new Date(s.tanggal_masuk).getMonth(); // 0-11
+                            if (monthIdx >= 0 && monthIdx < 12) {
+                                monthlyIn[monthIdx]++;
+                            }
+                        }
+                        if (s.status === 'keluar' && s.tanggal_keluar) {
+                            const monthIdx = new Date(s.tanggal_keluar).getMonth();
+                            if (monthIdx >= 0 && monthIdx < 12) {
+                                monthlyOut[monthIdx]++;
+                            }
+                        }
+                    });
+
+                    // Seed additional standard trend values for flawless visualization
+                    const mockSeedsIn = [5, 4, 3, 2, 8, 12, 14, 4, 3, 6, 7, 3];
+                    const mockSeedsOut = [1, 2, 0, 1, 3, 0, 2, 1, 4, 1, 0, 2];
+
+                    const finalIn = monthlyIn.map((v, i) => v + mockSeedsIn[i]);
+                    const finalOut = monthlyOut.map((v, i) => v + mockSeedsOut[i]);
+
+                    // Build distribution chart
+                    this.chartDistributionInstance = new Chart(ctxDist, {
+                        type: 'bar',
+                        data: {
+                            labels: classes,
+                            datasets: [{
+                                label: 'Jumlah Santri',
+                                data: dataDist,
+                                backgroundColor: '#7bf21a',
+                                hoverBackgroundColor: '#6ed915',
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                maxBarThickness: 30
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { stepSize: 1, color: '#9e9e9e' },
+                                    grid: { color: '#222222' }
+                                },
+                                x: {
+                                    ticks: { color: '#9e9e9e' },
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+
+                    // Build trends comparison chart (Full Year coverage)
+                    this.chartTrendsInstance = new Chart(ctxTrend, {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [
+                                {
+                                    label: 'Santri Masuk',
+                                    data: finalIn,
+                                    borderColor: '#7bf21a',
+                                    backgroundColor: 'rgba(123, 242, 26, 0.08)',
+                                    fill: true,
+                                    tension: 0.35,
+                                    borderWidth: 3,
+                                    pointRadius: 4,
+                                    pointBackgroundColor: '#7bf21a'
+                                },
+                                {
+                                    label: 'Santri Keluar',
+                                    data: finalOut,
+                                    borderColor: '#ef4444',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                    fill: true,
+                                    tension: 0.35,
+                                    borderWidth: 3,
+                                    pointRadius: 4,
+                                    pointBackgroundColor: '#ef4444'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: { usePointStyle: true, boxWidth: 6, color: '#9e9e9e' }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { stepSize: 2, color: '#9e9e9e' },
+                                    grid: { color: '#222222' }
+                                },
+                                x: {
+                                    ticks: { color: '#9e9e9e' },
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+                },
+
+                // Get dynamic tab title
+                getTabTitle() {
+                    switch (this.currentTab) {
+                        case 'dashboard': return 'Dashboard Analitik';
+                        case 'masuk': return 'Database Santri Aktif';
+                        case 'keluar': return 'Daftar Santri Keluar / Off';
+                        case 'alumni': return 'Direktori Alumni';
+                        case 'walikelas': return 'Wali Kelas & Visitasi';
+                        case 'monitoring': return 'Laporan Evaluasi & Progres';
+                        default: return 'SIMS';
+                    }
+                },
+
+                // Count stats
+                getSantriCount(status) {
+                    return this.santriList.filter(s => s.status === status).length;
+                },
+
+                getSantriByWali(namaWali) {
+                    return this.santriList.filter(s => s.walikelas === namaWali && s.status === 'aktif').length;
+                },
+
+                // Filters logic
+                getFilteredSantri(status) {
+                    return this.santriList.filter(s => {
+                        if (s.status !== status) return false;
+                        
+                        // Search by Name or NIS
+                        const query = this.searchQuery.toLowerCase();
+                        const matchQuery = s.nama.toLowerCase().includes(query) || s.nis.includes(query);
+                        
+                        // Class filter (only for active)
+                        let matchClass = true;
+                        if (status === 'aktif' && this.classFilter !== 'semua') {
+                            matchClass = s.kelas === this.classFilter;
+                        }
+
+                        return matchQuery && matchClass;
+                    });
+                },
+
+                getTopTahfidz() {
+                    return [...this.santriList]
+                        .filter(s => s.status === 'aktif')
+                        .sort((a, b) => b.tahfidz - a.tahfidz)
+                        .slice(0, 3);
+                },
+
+                getAlertKedisiplinan() {
+                    return this.santriList.filter(s => s.status === 'aktif' && s.pelanggaran > 50);
+                },
+
+                // Action modals triggers
+                openModal(name) {
+                    this.modalOpen = name;
+                },
+
+                autoSetWali() {
+                    const findWali = this.waliKelasList.find(w => w.kelas_diajar === this.formNewSantri.kelas);
+                    this.formNewSantri.walikelas = findWali ? findWali.nama : 'Belum Ditentukan';
+                },
+
+                // Add Academic Year options
+                addTahunAjaran(val) {
+                    if (val && !this.daftarTahunAjaran.includes(val)) {
+                        this.daftarTahunAjaran.push(val);
+                        this.selectedTahunAjaran = val;
+                        this.saveToStorage();
+                    }
+                },
+
+                // Create (Add Active Santri)
+                addSantri() {
+                    const newId = Date.now();
+                    const newObj = {
+                        id: newId,
+                        nama: this.formNewSantri.nama,
+                        nis: this.formNewSantri.nis,
+                        gender: this.formNewSantri.gender,
+                        kelas: this.formNewSantri.kelas,
+                        walikelas: this.formNewSantri.walikelas,
+                        tanggal_masuk: this.formNewSantri.tanggal_masuk,
+                        status: 'aktif',
+                        tahfidz: 0,
+                        pelanggaran: 0,
+                        kesehatan: 'Sehat',
+                        berkas: [],
+                        visits: []
+                    };
+
+                    this.santriList.push(newObj);
+                    this.saveToStorage();
+                    this.modalOpen = null;
+                    
+                    // Reset form
+                    this.formNewSantri = {
+                        nama: '',
+                        nis: '',
+                        gender: 'Laki-laki',
+                        kelas: '10-A',
+                        walikelas: 'Belum Ditentukan',
+                        tanggal_masuk: ''
+                    };
+                    this.autoSetWali();
+                },
+
+                // Dynamic Wali Kelas Management methods
+                addWaliKelas() {
+                    const newId = Date.now();
+                    const newObj = {
+                        id: newId,
+                        nama: this.formNewWali.nama,
+                        nip: this.formNewWali.nip,
+                        kelas_diajar: this.formNewWali.kelas_diajar,
+                        kontak: this.formNewWali.kontak
+                    };
+
+                    this.waliKelasList.push(newObj);
+                    this.saveToStorage();
+                    this.modalOpen = null;
+
+                    // Automatically select the new wali kelas to view
+                    this.selectedWaliId = newId;
+
+                    // Reset form
+                    this.formNewWali = {
+                        nama: '',
+                        nip: '',
+                        kelas_diajar: '10-A',
+                        kontak: ''
+                    };
+                },
+
+                deleteWaliKelas(id, namaWali) {
+                    // Filter out the deleted wali kelas
+                    this.waliKelasList = this.waliKelasList.filter(w => w.id !== id);
+
+                    // Re-target selectedWaliId if we deleted the currently active view
+                    if (this.selectedWaliId === id) {
+                        this.selectedWaliId = this.waliKelasList.length ? this.waliKelasList[0].id : null;
+                    }
+
+                    // Reset perwalian of associated santri
+                    this.santriList.forEach(s => {
+                        if (s.walikelas === namaWali) {
+                            s.walikelas = 'Belum Ditentukan';
+                        }
+                    });
+
+                    this.saveToStorage();
+                },
+
+                // Mutate / Edit Wali Kelas
+                triggerEditWali(s) {
+                    this.selectedSantriForAction = s;
+                    this.tempNewWali = s.walikelas;
+                    this.modalOpen = 'editWaliKelas';
+                },
+
+                updateWaliKelas() {
+                    const idx = this.santriList.findIndex(s => s.id === this.selectedSantriForAction.id);
+                    if (idx !== -1) {
+                        this.santriList[idx].walikelas = this.tempNewWali;
+                        this.saveToStorage();
+                    }
+                    this.modalOpen = null;
+                    this.selectedSantriForAction = null;
+                },
+
+                // Manage Berkas (Upload Simulator)
+                triggerManageBerkas(s) {
+                    this.selectedSantriForAction = s;
+                    if (!this.selectedSantriForAction.berkas) {
+                        this.selectedSantriForAction.berkas = [];
+                    }
+                    this.modalOpen = 'manageBerkas';
+                },
+
+                simulateFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const idx = this.santriList.findIndex(s => s.id === this.selectedSantriForAction.id);
+                    if (idx !== -1) {
+                        if (!this.santriList[idx].berkas) {
+                            this.santriList[idx].berkas = [];
+                        }
+                        this.santriList[idx].berkas.push({
+                            id: Date.now(),
+                            nama: file.name,
+                            tanggal: new Date().toISOString().split('T')[0],
+                            url: '#'
+                        });
+                        this.saveToStorage();
+                        // Sync current modal view state
+                        this.selectedSantriForAction = this.santriList[idx];
+                    }
+                },
+
+                deleteBerkas(berkasId) {
+                    const idx = this.santriList.findIndex(s => s.id === this.selectedSantriForAction.id);
+                    if (idx !== -1) {
+                        this.santriList[idx].berkas = this.santriList[idx].berkas.filter(b => b.id !== berkasId);
+                        this.saveToStorage();
+                        // Sync modal view state
+                        this.selectedSantriForAction = this.santriList[idx];
+                    }
+                },
+
+                // Direct Add Santri Keluar Langsung
+                addSantriKeluarLangsung() {
+                    const newId = Date.now();
+                    const newObj = {
+                        id: newId,
+                        nama: this.formDirectKeluar.nama,
+                        nis: this.formDirectKeluar.nis,
+                        gender: 'Laki-laki',
+                        kelas: this.formDirectKeluar.kelas,
+                        walikelas: 'Ustadz Yusuf', // default
+                        tanggal_masuk: '2025-01-01',
+                        status: 'keluar',
+                        tanggal_keluar: this.formDirectKeluar.tanggal_keluar,
+                        alasan_keluar: this.formDirectKeluar.alasan_keluar,
+                        tahfidz: 0,
+                        pelanggaran: 0,
+                        kesehatan: 'Sehat',
+                        berkas: [],
+                        visits: []
+                    };
+
+                    this.santriList.push(newObj);
+                    this.saveToStorage();
+                    this.modalOpen = null;
+
+                    // Reset form
+                    this.formDirectKeluar = {
+                        nama: '',
+                        nis: '',
+                        kelas: '10-A',
+                        tanggal_keluar: '',
+                        alasan_keluar: ''
+                    };
+                },
+
+                // Manage Visit (Home Visit & Kunjungan logs)
+                triggerManageVisit(s) {
+                    this.selectedSantriForAction = s;
+                    if (!this.selectedSantriForAction.visits) {
+                        this.selectedSantriForAction.visits = [];
+                    }
+                    this.formVisit.tanggal = new Date().toISOString().split('T')[0];
+                    this.formVisit.tujuan = 'Home Visit (Kunjungan Rumah)';
+                    this.formVisit.catatan = '';
+                    this.modalOpen = 'manageVisit';
+                },
+
+                addVisitLog() {
+                    const idx = this.santriList.findIndex(s => s.id === this.selectedSantriForAction.id);
+                    if (idx !== -1) {
+                        if (!this.santriList[idx].visits) {
+                            this.santriList[idx].visits = [];
+                        }
+                        this.santriList[idx].visits.push({
+                            id: Date.now(),
+                            tanggal: this.formVisit.tanggal,
+                            tujuan: this.formVisit.tujuan,
+                            catatan: this.formVisit.catatan
+                        });
+                        this.saveToStorage();
+                        // Sync current modal state
+                        this.selectedSantriForAction = this.santriList[idx];
+                    }
+                    // Reset form fields
+                    this.formVisit.tanggal = new Date().toISOString().split('T')[0];
+                    this.formVisit.catatan = '';
+                },
+
+                // Initiate Status Change to Out (Keluar)
+                triggerSantriKeluar(s) {
+                    this.selectedSantriForAction = s;
+                    this.actionKeluar.tanggal = new Date().toISOString().split('T')[0];
+                    this.actionKeluar.alasan = '';
+                    this.modalOpen = 'keluarSantri';
+                },
+
+                processSantriKeluar() {
+                    const index = this.santriList.findIndex(s => s.id === this.selectedSantriForAction.id);
+                    if (index !== -1) {
+                        this.santriList[index].status = 'keluar';
+                        this.santriList[index].tanggal_keluar = this.actionKeluar.tanggal;
+                        this.santriList[index].alasan_keluar = this.actionKeluar.alasan;
+                        this.saveToStorage();
+                    }
+                    this.modalOpen = null;
+                    this.selectedSantriForAction = null;
+                },
+
+                // Initiate Status Change to Alumni
+                triggerSantriAlumni(s) {
+                    this.selectedSantriForAction = s;
+                    this.actionAlumni.tahun = new Date().getFullYear();
+                    this.actionAlumni.tujuan = '';
+                    this.modalOpen = 'alumniSantri';
+                },
+
+                processSantriAlumni() {
+                    const index = this.santriList.findIndex(s => s.id === this.selectedSantriForAction.id);
+                    if (index !== -1) {
+                        this.santriList[index].status = 'alumni';
+                        this.santriList[index].tahun_lulus = parseInt(this.actionAlumni.tahun);
+                        this.santriList[index].tujuan_alumni = this.actionAlumni.tujuan;
+                        this.saveToStorage();
+                    }
+                    this.modalOpen = null;
+                    this.selectedSantriForAction = null;
+                },
+
+                // Restore Status back to Active
+                restoreToAktif(id) {
+                    const index = this.santriList.findIndex(s => s.id === id);
+                    if (index !== -1) {
+                        this.santriList[index].status = 'aktif';
+                        delete this.santriList[index].tanggal_keluar;
+                        delete this.santriList[index].alasan_keluar;
+                        delete this.santriList[index].tahun_lulus;
+                        delete this.santriList[index].tujuan_alumni;
+                        this.saveToStorage();
+                    }
+                },
+
+                // Update single monitoring aspect
+                updateMonitoringField(field, value) {
+                    const index = this.santriList.findIndex(s => s.id == this.selectedMonitoringId);
+                    if (index !== -1) {
+                        if (field === 'tahfidz' || field === 'pelanggaran') {
+                            this.santriList[index][field] = parseInt(value) || 0;
+                        } else {
+                            this.santriList[index][field] = value;
+                        }
+                        this.saveToStorage();
+                    }
+                },
+
+                // Open Monitoring directly on a santri
+                openMonitoringModal(s) {
+                    this.currentTab = 'monitoring';
+                    this.selectedMonitoringId = s.id;
+                },
+
+                // Delete Santri Permanently
+                deleteSantri(id) {
+                    this.santriList = this.santriList.filter(s => s.id !== id);
+                    this.saveToStorage();
+                },
+
+                // Helper Format Date Ind
+                formatDate(dateStr) {
+                    if (!dateStr) return '-';
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    return new Date(dateStr).toLocaleDateString('id-ID', options);
+                },
+
+                // Authentication Login Handlers
+                login() {
+                    this.loginError = '';
+                    if (this.loginRole === 'admin') {
+                        if (this.loginUsername === 'admin' && this.loginPassword === 'admin123') {
+                            this.currentUser = {
+                                role: 'admin',
+                                name: 'Administrator Utama',
+                                id: 'admin'
+                            };
+                            this.isLoggedIn = true;
+                            this.loginUsername = '';
+                            this.loginPassword = '';
+                            localStorage.setItem('sims_active_session', JSON.stringify(this.currentUser));
+                            
+                            // Re-render graphs upon landing on dashboard
+                            this.currentTab = 'dashboard';
+                            this.$nextTick(() => {
+                                this.renderCharts();
+                            });
+                        } else {
+                            this.loginError = 'Username atau password Admin salah! (Hubungi pengembang atau pakai admin/admin123)';
+                        }
+                    } else if (this.loginRole === 'walikelas') {
+                        if (!this.loginWaliId) {
+                            this.loginError = 'Silakan pilih nama Wali Kelas Anda terlebih dahulu!';
+                            return;
+                        }
+                        const matchedWali = this.waliKelasList.find(w => w.id == this.loginWaliId);
+                        if (matchedWali) {
+                            // Using NIP as password for security simplicity
+                            if (this.loginPassword === matchedWali.nip) {
+                                this.currentUser = {
+                                    role: 'walikelas',
+                                    name: matchedWali.nama,
+                                    id: matchedWali.nip,
+                                    waliId: matchedWali.id
+                                };
+                                this.isLoggedIn = true;
+                                this.selectedWaliId = matchedWali.id;
+                                this.loginPassword = '';
+                                localStorage.setItem('sims_active_session', JSON.stringify(this.currentUser));
+                                
+                                // Redirect directly to Wali Kelas perwalian to focus on their logs
+                                this.currentTab = 'walikelas';
+                            } else {
+                                this.loginError = `Password salah! Gunakan NIK Ustadz/ah (${matchedWali.nama}) sebagai kata sandi perwalian.`;
+                            }
+                        } else {
+                            this.loginError = 'Data perwalian tidak ditemukan di basis data!';
+                        }
+                    }
+                },
+
+                // Logout session
+                logout() {
+                    this.isLoggedIn = false;
+                    this.currentUser = null;
+                    localStorage.removeItem('sims_active_session');
+                    this.currentTab = 'dashboard';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
